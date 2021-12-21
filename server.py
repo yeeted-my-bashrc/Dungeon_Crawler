@@ -3,6 +3,8 @@
 #give permission by: chmod +x filename.py
 import socket
 import threading
+import pygame
+import classes
 
 running =True;
 
@@ -16,6 +18,7 @@ print("bound to address ", s.getsockname())
 #socket listens for up to 5 connections
 s.listen(5)
 
+testRect = classes.Rect(0,0,10,10)
 def send(conn,msg):
   #this encodes msg and sets a header which represents msg length, I think
   msg = f'hello world from server'.encode()

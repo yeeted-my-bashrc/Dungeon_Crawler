@@ -4,6 +4,8 @@
 import socket
 import time
 import threading
+import classes
+import pygame
 
 #socket for client
 s = socket.socket()
