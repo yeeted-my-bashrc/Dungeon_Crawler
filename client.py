@@ -2,7 +2,7 @@
 #THIS ALLOWS YOU TO RUN AS ./filename.py
 #give permission by: chmod +x filename.py
 
-#test
+#test 2
 import socket
 import time
 import threading
