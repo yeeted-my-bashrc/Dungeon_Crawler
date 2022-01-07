@@ -70,3 +70,10 @@ class Rect:
         if x5 >= x6 or y5 >= y6:
             return Rect(0, 0, 0, 0)
         return Rect(x5, y5, x6-x5, y6-y5)
+
+black = (0,0,0)
+class Room:
+  def __init__(self, Rect):
+    self.__Rect = Rect
+  def drawRoom(self, screen):
+    screen.draw.rect(screen, black,Rect)
