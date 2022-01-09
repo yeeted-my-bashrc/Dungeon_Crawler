@@ -7,6 +7,10 @@ import time
 import threading
 import utils
 import pygame
+import sys
+
+#sets terminal window caption. not sure if this only works on linux
+sys.stdout.write("\x1b]2;Client\x07")
 
 #socket for client
 s = socket.socket()
@@ -25,6 +29,7 @@ pygame.display.init()
 pygame.mixer.init()
 
 screen = pygame.display.set_mode((screenWidth, screenHeight))
+pygame.display.set_caption('Dungeon Crawler')
 
 def send(msg):
   #this encodes msg and sets a header which represents msg length, I think

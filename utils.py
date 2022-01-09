@@ -110,7 +110,7 @@ def generateMap(numRooms,mapSize):
                 tempRect = Rect(0,0,0,0)
                 generatePassage(random.randint(1,4))
                 for room in range(len(rooms)):
-                    while roomsInit[room] and rooms[room].colliderect(tempRect)
+                    while roomsInit[room] and rooms[room].colliderect(tempRect):
                         generatePassage(random.randint(1,4))
                 rooms.append(tempRect)
                 passages[i][j]=numRooms
@@ -123,17 +123,17 @@ def generatePassage(direction):
         tempRect.width = (mapSize/numRooms)/50
         tempRect.x = rooms[i].rect.x+rooms[i].rect.width/2
         tempRect.y = room[i].rect.y-tempRect.height
-    else if direction == 2: #left
+    elif direction == 2: #left
         tempRect.height =(mapSize/numRooms)/50
         tempRect.width = matrix[i][j]*(mapSize/numRooms)/50
         tempRect.x = rooms[i].rect.x-tempRect.width
         tempRect.y = rooms[i].rect.y+rooms[i].rect.height/2
-    else if direction == 3: #right
+    elif direction == 3: #right
         tempRect.height =(mapSize/numRooms)/50
         tempRect.width = matrix[i][j]*(mapSize/numRooms)/50
         tempRect.x = rooms[i].rect.x+rooms[i].rect.width
         tempRect.y = rooms[i].rect.y+rooms[i].rect.height/2
-    else if direction == 3: # bottom
+    elif direction == 3: # bottom
         tempRect.height = matrix[i][j]*(mapSize/numRooms)/50
         tempRect.width = (mapSize/numRooms)/50
         tempRect.x = rooms[i].rect.x+rooms[i].rect.width/2

@@ -4,9 +4,19 @@
 import socket
 import threading
 import pygame
-import utils
+import sys
+from utils import *
 
+try:
+  import pyperclip as pc
+except ModuleNotFoundError:
+  print('Massimo: copy/paste "pip install pyperclip" into terminal to automatically copy server IP for convenience. ctrl+shift+v to paste into terminal')
+
+
+#sets terminal window caption. not sure if this only works on linux
+sys.stdout.write("\x1b]2;Server\x07")
 running =True;
+
 
 #create server socket
 s = socket.socket()
@@ -14,11 +24,12 @@ s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 #binds socket to a host and port
 s.bind((socket.gethostname(), 50000))
 print("bound to address ", s.getsockname())
+pc.copy(socket.gethostbyname(socket.gethostname()))
 
 #socket listens for up to 5 connections
 s.listen(5)
 
-testRect = classes.Rect(0,0,10,10)
+testRect = Rect(0,0,10,10)
 def send(conn,msg):
   #this encodes msg and sets a header which represents msg length, I think
   msg = f'{msg}'.encode()
