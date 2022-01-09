@@ -2,11 +2,10 @@
 #THIS ALLOWS YOU TO RUN AS ./filename.py
 #give permission by: chmod +x filename.py
 
-#test 2
 import socket
 import time
 import threading
-import classes
+import utils
 import pygame
 
 #socket for client
@@ -19,9 +18,17 @@ s.connect((server_IP,50000))
 headerSize=10
 running=True
 
+screenWidth = 800
+screenHeight = 800
+
+pygame.display.init()
+pygame.mixer.init()
+
+screen = pygame.display.set_mode((screenWidth, screenHeight))
+
 def send(msg):
   #this encodes msg and sets a header which represents msg length, I think
-  msg = f'hello world from client'.encode()
+  msg = f'{msg}'.encode()
   msg = bytes(f"{len(msg):<{headerSize}}",'utf-8')+msg
   s.send(msg)
 

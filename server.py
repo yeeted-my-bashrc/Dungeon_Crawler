@@ -4,7 +4,7 @@
 import socket
 import threading
 import pygame
-import classes
+import utils
 
 running =True;
 
@@ -21,12 +21,16 @@ s.listen(5)
 testRect = classes.Rect(0,0,10,10)
 def send(conn,msg):
   #this encodes msg and sets a header which represents msg length, I think
-  msg = f'hello world from server'.encode()
+  msg = f'{msg}'.encode()
   msg = bytes(f"{len(msg):<{headerSize}}",'utf-8')+msg
   conn.send(msg)
 
+
+connections = []
+
 headerSize=10
 msglen=100
+receiveThreads=[]
 
 def receive(conn, addr):
   global headerSize,msglen
@@ -55,8 +59,9 @@ def receive(conn, addr):
 
 while running:
   conn, addr = s.accept()
-  thread = threading.Thread(target = receive, args = (conn, addr))
-  thread.start()
+  connections.append((conn,addr))
+  receiveThreads.append(threading.Thread(target = receive, args = (conn, addr)))
+  receiveThreads[-1].start()
   send(conn,"hello world from server")
   print("new conn", threading.activeCount()-1)
 
