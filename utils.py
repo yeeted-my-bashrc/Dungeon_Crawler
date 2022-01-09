@@ -138,3 +138,29 @@ def generatePassage(direction):
         tempRect.width = (mapSize/numRooms)/50
         tempRect.x = rooms[i].rect.x+rooms[i].rect.width/2
         tempRect.y = rooms[i].rect.y+rooms[i].rect.height-tempRect.height
+
+        
+def generate_possible_connections(number_of_rooms: int):
+    ret = []
+    for i in range(number_of_rooms):
+        for j in range(i + 1, number_of_rooms):
+            ret.append([i, j])
+    return ret
+
+
+def generate_room_scheme(number: int, connections:int):
+    """
+    """
+    possible_connections = generate_possible_connections(number)
+    connections = random.sample(possible_connections, connections)
+    scheme = []
+    for i in range(number):
+        scheme.append([])
+        for j in range(number):
+            scheme[i].append(0)
+    for i in connections:
+        j, k = i[0], i[1]
+        distance = random.randrange(1, 5)
+        scheme[j][k] = distance
+        scheme[k][j] = distance
+    return scheme
