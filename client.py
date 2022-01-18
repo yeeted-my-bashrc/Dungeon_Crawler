@@ -5,9 +5,10 @@
 import socket
 import time
 import threading
-import utils
+from utils import *
 import pygame
 import sys
+import pickle
 
 #sets terminal window caption. not sure if this only works on linux
 sys.stdout.write("\x1b]2;Client\x07")
@@ -39,8 +40,10 @@ def send(msg):
 
 headerSize=10
 msglen=100 #just to set it to something
+dungeon = Dungeon()
+player = Player(Rect(0,0,48,48),pygame.image.load("/images/default_char.png"))
 def receive(conn, addr):
-  global headerSize,msglen
+  global headerSize,msglen,dungeon,player
   while running:
     msg_buffer = b''
     new_msg = True
@@ -59,7 +62,11 @@ def receive(conn, addr):
       if len(msg_buffer)-headerSize >= msglen:
         decoded_msg = msg_buffer[headerSize:headerSize + msglen].decode()
         print(headerSize,msglen,"full message: ",decoded_msg)
-
+        if decoded_msg[0] == "1":
+          msgList = decoded_msg.split(":")
+          player.rect.x = msgList[1]
+          player.rect.y = msgList[2]
+          dungeon.map = pickle.loads(msgList[3])
         new_msg = True
         msg_buffer = msg_buffer[headerSize+msglen:]
 
@@ -68,5 +75,4 @@ recv_thread = threading.Thread(target=receive, args = (s,server_IP))
 recv_thread.start()
 
 while running:
-  send("hello word from client")
-  time.sleep(1);
+

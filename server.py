@@ -5,6 +5,7 @@ import socket
 import threading
 import pygame
 import sys
+import pickle
 from utils import *
 
 try:
@@ -29,15 +30,22 @@ pc.copy(socket.gethostbyname(socket.gethostname()))
 #socket listens for up to 5 connections
 s.listen(5)
 
-testRect = Rect(0,0,10,10)
+connections = []
+
 def send(conn,msg):
   #this encodes msg and sets a header which represents msg length, I think
   msg = f'{msg}'.encode()
   msg = bytes(f"{len(msg):<{headerSize}}",'utf-8')+msg
   conn.send(msg)
 
-
-connections = []
+spawnX=0
+spawnY=0
+dungeon = Dungeon()
+def main():
+  global spawnX, spawnY,dungeon
+  spawnCoords = dungeon.generateMap()
+  spawnX = spawnCoords[0]
+  spawnY = spawnCoords[1]
 
 headerSize=10
 msglen=100
@@ -68,14 +76,18 @@ def receive(conn, addr):
         new_msg = True
         msg_buffer = msg_buffer[headerSize+msglen:]
 
+  time.sleep(0.08)
+
+mainThread = threading.Thread(target = main)
+mainThread.start()
 while running:
   conn, addr = s.accept()
-  connections.append((conn,addr))
+  connections.append(conn)
   receiveThreads.append(threading.Thread(target = receive, args = (conn, addr)))
   receiveThreads[-1].start()
+  send(connections[-1],f"1:{spawnX}:{spawnY}:{pickle.dumps(dungeon.map)}")
   send(conn,"hello world from server")
   print("new conn", threading.activeCount()-1)
-
 
 
 

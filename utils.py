@@ -72,95 +72,166 @@ class Rect:
             return Rect(0, 0, 0, 0)
         return Rect(x5, y5, x6-x5, y6-y5)
 
-black = (0,0,0)
-class Room:
-    def __init__(self, rect):
+class Player:
+    def __init(self,rect,image):
         self.__rect = rect
-    def drawRoom(self, screen):
-        screen.draw.rect(screen, black,rect)
-def generateMap(numRooms,mapSize):
-    matrix = [numRooms][numRooms]
-    for i in range(0,numRooms):
-        matrix[i]=i
-        for j in i:
-            j = Math.random(1,11)
-            if j>numRooms or i==j:
-                j = 0
-    rooms = []
-    #creates placeholders
-    for i in range(numRooms):
-        rooms.append(Room(Rect(0,0,0,0)))
-    #creates first room to generate map from
-    rooms[0] = Room(Rect(0,0,random.randint(mapSize/numRooms/2,mapSize/numRooms/5),random.randint(mapSize/numRooms/2,mapSize/numRooms/5)))
+        self.__image = image
+    @property
+    def rect(self):
+        return self.__rect
+
+    @rect.setter
+    def rect(self, rect):
+        self.__rect = rect
     
-    #keeps track of rooms that have been initialized
-    roomsInit = [False]*numRooms
-    roomsInit[0] = True
-    #keeps track of passages for each room and for what room
-    passages = {}
-    for i in range(numRooms):
-        passages[i]=[None]*numRooms
+    @property
+    def image(self):
+        return self.__image
 
-    for i in matrix:
-        # starts with first room connections
-        for j in i:
-            #checks for connection between room i and room j and if passage has already been created
-            if j!=0 and passages[j][i]==None:
-                #makes passageway
-                tempRect = Rect(0,0,0,0)
-                generatePassage(random.randint(1,4))
-                for room in range(len(rooms)):
-                    while roomsInit[room] and rooms[room].colliderect(tempRect):
-                        generatePassage(random.randint(1,4))
-                rooms.append(tempRect)
-                passages[i][j]=numRooms
+    @image.setter
+    def image(self, image):
+        self.__image = image
+    
+class Tile:
+    def __init__(self, rect,type):
+        self.__rect = rect
+        self.__type = type;
+        self.__visible = False #visible to player
+        self.__revealed = False #explored by player
+   
+    @property
+    def rect(self):
+        return self.__rect
 
+    @rect.setter
+    def rect(self, rect):
+        self.__rect = rect
+    
+    @property
+    def type(self):
+        return self.__type
 
-def generatePassage(direction):
-    global tempRect
-    if direction == 1: #top
-        tempRect.height = matrix[i][j]*(mapSize/numRooms)/50
-        tempRect.width = (mapSize/numRooms)/50
-        tempRect.x = rooms[i].rect.x+rooms[i].rect.width/2
-        tempRect.y = room[i].rect.y-tempRect.height
-    elif direction == 2: #left
-        tempRect.height =(mapSize/numRooms)/50
-        tempRect.width = matrix[i][j]*(mapSize/numRooms)/50
-        tempRect.x = rooms[i].rect.x-tempRect.width
-        tempRect.y = rooms[i].rect.y+rooms[i].rect.height/2
-    elif direction == 3: #right
-        tempRect.height =(mapSize/numRooms)/50
-        tempRect.width = matrix[i][j]*(mapSize/numRooms)/50
-        tempRect.x = rooms[i].rect.x+rooms[i].rect.width
-        tempRect.y = rooms[i].rect.y+rooms[i].rect.height/2
-    elif direction == 3: # bottom
-        tempRect.height = matrix[i][j]*(mapSize/numRooms)/50
-        tempRect.width = (mapSize/numRooms)/50
-        tempRect.x = rooms[i].rect.x+rooms[i].rect.width/2
-        tempRect.y = rooms[i].rect.y+rooms[i].rect.height-tempRect.height
+    @type.setter
+    def type(self, type):
+        self.__type = type
+    
+    @property
+    def visible(self):
+        return self.__visible
 
+    @visible.setter
+    def visible(self, visible):
+        self.__visible = visible
+    
+    @property
+    def revealed(self):
+        return self.__revealed
+
+    @revealed.setter
+    def revealed(self, revealed):
+        self.__revealed = revealed
+
+    def drawTile(self, screen):
+        screen.draw.rect(screen, black,rect)
+
+class Dungeon():
+    tileSize = 48
+    mapWidth = 50
+    mapHeight = 50
+    mapRenderWidth= 16 #technically 16.67
+    mapRenderHeight = 16
+    mapRenderX = ((800-(mapRenderWidth*tileSize))/2) #offsets for map rendering because tiles don't fit exactly
+    mapRenderY = ((800-(mapRenderHeight*tileSize))/2)
+    holeTile = 0
+    groundTile = 1
+    wallTile = 2
+    maxTiles = 200
+    def __init__(self):
+        self.__map = [mapWidth][mapHeight]
+        self.__camera = cameraRect
+
+    @property
+    def map(self):
+        return self.__map
+
+    @map.setter
+    def map(self, map):
+        self.__map = map
+
+    def loadTiles():
+        holeTileImage = pygame.image.load("/images/holeTile.png")
+        darkTileImage = pygame.image.load("/images/darkTile.png")
+        wallTileImage = pygame.image.load("/images/wallTile.png")
+        groundTileImage = pygame.image.load("/images/groundTile.png")
+        tileImages = {0:holeTileImage,1:groundTileImage,2:wallTileImage}
+    def drawMap(screen,cameraRect):
+        mx = 0
+        my = 0
+        #iterates and draws tiles in accordance with camera position
+        for x in range(0,mapRenderWidth):
+            for y in range(0,mapRenderHeight):
+                mx = x + camera.x
+                my = y + camera.y
+                if mx >=0 && my>=0 &&mx<mapWidth&&mx<mapHeight:
+                    tile = map[mx][my]
+                    if tile.revealed == True:
+                        if tile.type!=0:
+                            screen.blit(tileImages[tile.type],x*tileSize+mapRenderX,y*tileSize+mapRenderY)
+                    elif tile.revealed == False:
+                        screen.blit(darkTileImage,x*tileSize+mapRenderX,y*tileSize+mapRenderY)
+    def generateMap():
+        tidyWalls(randomWalk())
+
+    def randomWalk():
+        coverage = 20 + random.randint(0,16)  #percentage of map to be covered with tiles
+        n = (mapWidth*mapHeight) * (coverage *0.01) # coverage converted to actual tile number
+        for x in range(0,mapWidth):
+            for y in range(0,mapHeight):
+                map[x][y] = Tile(Rect(x,y,tileSize,tileSize),wallTile)
+        x = random.randint(1,mapWidth-1)
+        y = random.randint(1,mapHeight-1)
+        dx = dy = straight = 0
+        map[x][y].type=groundTile
+        while n > 0:
+            straight = max(straight-1,0) #makes tunnels
+            if straight == 0:
+                direction = random.randint(0,4)
+                if direction == 0:
+                    dx = 0
+                    dy = -1
+                elif direction == 1:
+                    dx = 0
+                    dy = 1
+                elif direction == 2:
+                    dx = -1
+                    dy = 0
+                elif direction == 3:
+                    dx = 0
+                    dy = 0
+                elif direction == 4:
+                    straight = 4 + random.randint(0,7)
+            x = min(max(x+dx,1),mapWidth-2)
+            y = min(max(y+dy,1),mapHeight-2)
+            if map[x][y].type==wallTile:
+                map[x][y].type = groundTile
+                n-=1
+        return [x,y]
+    def tidyWalls(spawnCoords):
+        while True: # do while loop using python
+            tmp = [row[:] for row in map] #copies map without pointing to map, so i can change tmp without changing map
+            for x in range(1,mapWidth):
+                for y in range(1, mapHeight):
+                    if map[x][y].type == wallTile and countWalls(x,y)<2:
+                        wallsRemoved =1
+                        tmp[x][y] = groundTile
+            map = [row[:] for row in tmp]
+            if wallsRemoved == 0:
+                
+        return spawnCoords
+    def countWalls(mx,my): #counts wall tiles next to current tile to see if it's isolated
+        for x in range(-1,2):
+            for y in range(-1,2):
+                if (x!=0 or y!=0) && map[mx+x][my+y].type == wallTile:
+                    n++
+        return n
         
-def generate_possible_connections(number_of_rooms: int):
-    ret = []
-    for i in range(number_of_rooms):
-        for j in range(i + 1, number_of_rooms):
-            ret.append([i, j])
-    return ret
-
-
-def generate_room_scheme(number: int, connections:int):
-    """
-    """
-    possible_connections = generate_possible_connections(number)
-    connections = random.sample(possible_connections, connections)
-    scheme = []
-    for i in range(number):
-        scheme.append([])
-        for j in range(number):
-            scheme[i].append(0)
-    for i in connections:
-        j, k = i[0], i[1]
-        distance = random.randrange(1, 5)
-        scheme[j][k] = distance
-        scheme[k][j] = distance
-    return scheme
