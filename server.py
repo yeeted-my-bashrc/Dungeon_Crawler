@@ -8,6 +8,7 @@ import sys
 import pickle
 import urllib
 import time
+import json
 from utils import *
 
 try:
@@ -17,7 +18,7 @@ except ModuleNotFoundError:
         'Massimo: copy/paste "pip install pyperclip" into terminal to automatically copy server IP for convenience. ctrl+shift+v to paste into terminal'
     )
 
-def get_internal_ip():
+def get_internal_ip() -> str:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(0)
     try:
@@ -30,6 +31,7 @@ def get_internal_ip():
         s.close()
     return str(IP)
 # sets terminal window caption. not sure if this only works on linux
+
 sys.stdout.write("\x1b]2;Server\x07")
 running = True
 
@@ -48,7 +50,7 @@ s.listen(5)
 connections = []
 
 
-def send(conn, msg):
+def send(conn, msg) -> None:
     # this encodes msg and sets a header which represents msg length, I think
     msg = f"{msg}".encode()
     msg = bytes(f"{len(msg):<{headerSize}}", "utf-8") + msg
@@ -57,7 +59,7 @@ def send(conn, msg):
 
 spawnX = 0
 spawnY = 0
-dungeon = Dungeon()
+dungeon: Dungeon = Dungeon()
 
 
 def main():
@@ -99,14 +101,19 @@ def receive(conn, addr):
 
     time.sleep(0.08)
 
+encoder = RoomsJSON()
 
 mainThread = threading.Thread(target=main)
 mainThread.start()
 while running:
-    conn, addr = s.accept()
-    connections.append(conn)
-    receiveThreads.append(threading.Thread(target=receive, args=(conn, addr)))
-    receiveThreads[-1].start()
-    send(connections[-1], f"1:{spawnX}:{spawnY}:{pickle.dumps(dungeon.map).decode('latin-1')}")
-    send(conn, "hello world from server")
-    print("new conn", threading.active_count() - 1)
+    try:
+        conn, addr = s.accept()
+        connections.append(conn)
+        receiveThreads.append(threading.Thread(target=receive, args=(conn, addr)))
+        receiveThreads[-1].start()
+        print(dungeon.map)
+        send(connections[-1], f"1:{spawnX}:{spawnY}:{encoder.encode(dungeon.map)}")
+        send(conn, "hello world from server")
+        print("new conn", threading.active_count() - 1)
+    except KeyboardInterrupt:
+        running = False

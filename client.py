@@ -9,6 +9,7 @@ from utils import *
 import pygame
 import sys
 import pickle
+import json
 
 # sets terminal window caption. not sure if this only works on linux
 sys.stdout.write("\x1b]2;Client\x07")
@@ -35,7 +36,7 @@ pygame.display.set_caption("Dungeon Crawler")
 
 def send(msg):
     # this encodes msg and sets a header which represents msg length, I think
-    msg = f"{msg}".encode()
+    msg = msg.encode()
     msg = bytes(f"{len(msg):<{headerSize}}", "utf-8") + msg
     s.send(msg)
 
@@ -43,8 +44,8 @@ def send(msg):
 headerSize = 10
 msglen = 100  # just to set it to something
 dungeon = Dungeon()
-player = Player(Rect(0, 0, 48, 48), pygame.image.load("/images/default_char.png"))
-
+player = Player(Rect(0, 0, 48, 48), pygame.image.load("./images/default_char.png"))
+decoder = RoomsJSON()
 
 def receive(conn, addr):
     global headerSize, msglen, dungeon, player
@@ -70,9 +71,12 @@ def receive(conn, addr):
                     msgList = decoded_msg.split(":")
                     player.rect.x = msgList[1]
                     player.rect.y = msgList[2]
-                    dungeon.map = pickle.loads(msgList[3])
+                    dungeon.map = RoomsJSON.decode(msgList[3])
                 new_msg = True
                 msg_buffer = msg_buffer[headerSize + msglen :]
+            
+            if dungeon.map:
+                dungeon.drawMap(screen, player.rect)
 
 
 recv_thread = threading.Thread(target=receive, args=(s, server_IP))

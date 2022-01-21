@@ -1,13 +1,15 @@
 import pygame
 import random
+import json
+import pickle
+from typing import Any, List, Union, cast
 
-
-def create_empty_map(width, height):
-    __map = []
+def create_empty_map(width: int, height: int) -> List[List[None]]:
+    __map: List[List[None]] = []
     for x in range(width):
         __map.append([])
-        for y in range(height):
-            __map[x][y] = None
+        for _ in range(height):
+            __map[x].append(None)
     return __map
 
 
@@ -17,42 +19,51 @@ class Rect:
         self.__y = y
         self.__width = width
         self.__height = height
-        self.__pyg_rect = pygame.Rect(
+        self.__pyg_rect: Union[None, pygame.Rect] = pygame.Rect(
             int(self.__x), int(self.__y), self.__width, self.__height
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "x: {} y: {} width: {} height: {}".format(
             self.__x, self.__y, self.__width, self.__height
         )
 
     @property
-    def x(self):
+    def x(self) -> float:
         return self.__x
 
     @x.setter
-    def x(self, x):
+    def x(self, x: float) -> None:
         self.__x = float(x)
-        self.__pyg_rect.x = int(self.__x)
+        cast(pygame.Rect, self.__pyg_rect).x = int(self.__x)
 
     @property
-    def y(self):
+    def pyg_rect(self) -> Union[pygame.Rect, None]:
+        return self.__pyg_rect
+    
+    @pyg_rect.deleter
+    def pyg_rect(self) -> None:
+        self.__pyg_rect = None
+
+
+    @property
+    def y(self) -> float:
         return self.__y
 
     @y.setter
-    def y(self, y):
+    def y(self, y: float) -> None:
         self.__y = float(y)
-        self.__pyg_rect.y = int(self.__y)
+        cast(pygame.Rect, self.__pyg_rect).y = int(self.__y)
 
     @property
-    def width(self):
+    def width(self) -> int:
         return self.__width
 
     @property
-    def height(self):
+    def height(self) -> int:
         return self.__height
 
-    def colliderect(self, other, adjustment = 0):
+    def colliderect(self, other: Any, adjustment: float = 0) -> bool:
         x = other.x + adjustment
         y = other.y + adjustment
         width = other.width - adjustment * 2
@@ -69,7 +80,7 @@ class Rect:
 
 
     # returns shared rect space between two rects
-    def rectintersection(self, other):
+    def rectintersection(self, other: "Rect") -> "Rect":
         x5 = max(self.x, other.x)
         x6 = min(self.x + self.width, other.x + other.width)
         y5 = max(self.y, other.y)
@@ -80,69 +91,93 @@ class Rect:
 
 
 class Player:
-    def __init(self, rect, image):
+    def __init__(self, rect: pygame.Rect, image: pygame.Surface):
         self.__rect = rect
         self.__image = image
 
     @property
-    def rect(self):
+    def rect(self) -> pygame.Rect:
         return self.__rect
 
     @rect.setter
-    def rect(self, rect):
+    def rect(self, rect: pygame.Rect) -> None:
         self.__rect = rect
 
     @property
-    def image(self):
+    def image(self) -> pygame.Surface:
         return self.__image
 
     @image.setter
-    def image(self, image):
+    def image(self, image: pygame.Surface) -> None:
         self.__image = image
 
 
 class Tile:
-    def __init__(self, rect, type):
+    def __init__(self, rect: Rect, type: int):
         self.__rect = rect
         self.__type = type
         self.__visible = False  # visible to player
         self.__revealed = False  # explored by player
 
     @property
-    def rect(self):
+    def rect(self) -> Rect:
         return self.__rect
 
     @rect.setter
-    def rect(self, rect):
+    def rect(self, rect: Rect) -> None:
         self.__rect = rect
 
     @property
-    def type(self):
+    def type(self) -> int:
         return self.__type
 
     @type.setter
-    def type(self, type):
+    def type(self, type: int) -> None:
         self.__type = type
 
     @property
-    def visible(self):
+    def visible(self) -> bool:
         return self.__visible
 
     @visible.setter
-    def visible(self, visible):
+    def visible(self, visible: bool) -> None:
         self.__visible = visible
 
     @property
-    def revealed(self):
+    def revealed(self) -> bool:
         return self.__revealed
 
     @revealed.setter
-    def revealed(self, revealed):
+    def revealed(self, revealed: bool) -> None:
         self.__revealed = revealed
 
-    def drawTile(self, screen):
-        screen.draw.rect(screen, black, rect)
+    def drawTile(self, screen: pygame.Surface) -> None:
+        screen.draw.rect(screen, self.visible, self.rect)
 
+class RoomsJSON(json.JSONEncoder, json.JSONDecoder):
+    def __init__(self) -> RoomsJSON:
+        self.object_hook = self.__object_hook
+        json.JSONEncoder.__init__(self)
+        json.JSONDecoder.__init__(self)
+
+    def default(self, obj) -> Union(dict[str, Any], Any):
+        if isinstance(obj, Rect) or isinstance(obj, Tile):
+            print("omg hi")
+            obj_dict = obj.__dict__
+            if isinstance(obj, Tile):
+                del obj_dict["_Tile__rect"].pyg_rect
+            return obj_dict
+        return json.JSONEncoder.default(self, obj)
+
+    def __object_hook(self, obj):
+        if "__class__" in obj:
+            if obj["__class__"] == Rect:
+                return Rect(obj["x"], obj["y"], obj["width"], obj["height"])
+            elif obj["__class__"] == Tile:
+                return Tile(obj["rect"], obj["type"])
+            
+        return obj
+    
 
 class Dungeon:
     tileSize = 48
@@ -160,8 +195,8 @@ class Dungeon:
     maxTiles = 200
 
     def __init__(self):
-        self.__map = create_empty_map(self.mapwidth, self.mapheight)
-        self.__camera = cameraRect  # don't know what this line is supposed to be
+        self.map = create_empty_map(self.mapWidth, self.mapHeight)
+        # self.__camera = cameraRect  # don't know what this line is supposed to be
 
     @property
     def map(self):
@@ -187,7 +222,7 @@ class Dungeon:
                 mx = x + self.__camera.x
                 my = y + self.__camera.y
                 if mx >= 0 and my >= 0 and mx < self.mapWidth and mx < self.mapHeight:
-                    tile = self.__map[mx][my]
+                    tile = self.map[mx][my]
                     if tile.revealed == True:
                         if tile.type != 0:
                             screen.blit(
@@ -214,13 +249,14 @@ class Dungeon:
         )  # coverage converted to actual tile number
         for x in range(0, self.mapWidth):
             for y in range(0, self.mapHeight):
-                self.__map[x][y] = Tile(
+
+                self.map[x][y] = Tile(
                     Rect(x, y, self.tileSize, self.tileSize), self.wallTile
                 )
         x = random.randint(1, self.mapWidth - 1)
         y = random.randint(1, self.mapHeight - 1)
         dx = dy = straight = 0
-        self.__map[x][y].type = Tile(
+        self.map[x][y].type = Tile(
             Rect(x, y, self.tileSize, self.tileSize), self.groundTile
         )
         while n > 0:
@@ -243,8 +279,8 @@ class Dungeon:
                     straight = 4 + random.randint(0, 7)
             x = min(max(x + dx, 1), self.mapWidth - 2)
             y = min(max(y + dy, 1), self.mapHeight - 2)
-            if self.__map[x][y].type == self.wallTile:
-                self.__map[x][y].type = self.groundTile
+            if self.map[x][y].type == self.wallTile:
+                self.map[x][y].type = self.groundTile
                 n -= 1
         return [x, y]
 
@@ -270,7 +306,7 @@ class Dungeon:
         n = 0
         for x in range(-1, 2):
             for y in range(-1, 2):
-                if (x != 0 or y != 0) and self.__map[mx + x][
+                if (x != 0 or y != 0) and self.map[mx + x][
                     my + y
                 ].type == self.wallTile:
                     n += 1
